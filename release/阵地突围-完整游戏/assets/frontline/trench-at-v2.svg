@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="280" height="170" viewBox="0 0 280 170">
+  <defs>
+    <linearGradient id="gun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#747b72"/>
+      <stop offset=".45" stop-color="#3b423d"/>
+      <stop offset="1" stop-color="#171c19"/>
+    </linearGradient>
+    <linearGradient id="armor" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8a8b70"/>
+      <stop offset=".45" stop-color="#5b5e4b"/>
+      <stop offset="1" stop-color="#34392f"/>
+    </linearGradient>
+    <linearGradient id="sand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b69b6b"/>
+      <stop offset=".55" stop-color="#756044"/>
+      <stop offset="1" stop-color="#43382a"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#10130f" flood-opacity=".68"/>
+    </filter>
+  </defs>
+  <g filter="url(#shadow)">
+    <ellipse cx="129" cy="151" rx="112" ry="10" fill="#131713" opacity=".58"/>
+    <g stroke="#423727" stroke-width="2">
+      <path d="M16 126c7-13 32-15 49-4l-3 23H20z" fill="url(#sand)"/>
+      <path d="M58 123c7-13 34-15 51-3l-2 26H61z" fill="url(#sand)"/>
+      <path d="M103 121c8-12 36-13 52-1l-1 26h-49z" fill="url(#sand)"/>
+      <path d="M149 124c8-11 34-12 49-1l2 23h-49z" fill="url(#sand)"/>
+    </g>
+    <path d="M42 128h151l13 18H28z" fill="#34372f" stroke="#171b18" stroke-width="4"/>
+    <path d="M75 112h81l13 18H61z" fill="#4f5143" stroke="#252a24" stroke-width="3"/>
+    <path d="M73 48l80-4 22 73-113 2z" fill="url(#armor)" stroke="#242a24" stroke-width="5"/>
+    <path d="M86 58l52-3 14 49-75 2z" fill="#252a25" opacity=".62"/>
+    <path d="M94 50l9 65M139 48l17 64" stroke="#a4a68d" stroke-width="2.5" opacity=".42"/>
+    <g fill="#c2bd91">
+      <circle cx="82" cy="59" r="3"/><circle cx="146" cy="55" r="3"/>
+      <circle cx="71" cy="109" r="3"/><circle cx="162" cy="106" r="3"/>
+    </g>
+    <path d="M107 72h78v18h-78z" fill="url(#gun)" stroke="#151a17" stroke-width="4"/>
+    <path d="M180 76h79l11 5-11 6h-79z" fill="#282e2a" stroke="#111512" stroke-width="3"/>
+    <path d="M253 74h18v15h-18z" fill="#5c625a"/>
+    <path d="M113 90h45l-7 22h-32z" fill="#292f2a"/>
+    <path d="M119 107l-25 27M151 107l25 27" stroke="#2a302b" stroke-width="7"/>
+    <path d="M39 94h32v31H39z" fill="#68674c" stroke="#282c25" stroke-width="3"/>
+    <path d="M44 100h22v5H44z" fill="#b4a86d"/>
+    <path d="M195 101l14 5-3 15-16-4z" fill="#605b46" stroke="#2a2b25" stroke-width="2"/>
+    <path d="M198 105l10 3" stroke="#d4be70" stroke-width="3"/>
+    <path d="M45 137h151" stroke="#bea56d" stroke-width="2" opacity=".52"/>
+  </g>
+</svg>
