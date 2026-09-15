@@ -49,8 +49,9 @@ jobs:
             gh api --method PATCH "repos/$repo/git/refs/tags/latest" \
               -f "sha=$GITHUB_SHA" -F force=true
             gh release upload latest "$archive" --repo "$repo" --clobber
-            gh release edit latest --repo "$repo" --title "$title" --notes "$notes"
+            gh release edit latest --repo "$repo" --target "$GITHUB_SHA" --latest \
+              --title "$title" --notes "$notes"
           else
             gh release create latest "$archive" --repo "$repo" --target "$GITHUB_SHA" \
-              --title "$title" --notes "$notes"
+              --title "$title" --latest --notes "$notes"
           fi
