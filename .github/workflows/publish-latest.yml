@@ -1,0 +1,56 @@
+name: Publish latest downloadable game
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: latest-game-release
+  cancel-in-progress: true
+
+jobs:
+  package-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out current source
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.x"
+
+      - name: Build clean game package
+        run: python tools/package_game.py --output-dir build
+
+      - name: Keep a workflow artifact for this build
+        uses: actions/upload-artifact@v4
+        with:
+          name: zhen-di-tu-po-${{ github.sha }}
+          path: build/zhen-di-tu-po-latest.zip
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Update rolling latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          repo="$GITHUB_REPOSITORY"
+          archive="build/zhen-di-tu-po-latest.zip"
+          title="阵地突围｜最新可玩版"
+          notes="由 main 分支自动构建。源码提交：${GITHUB_SHA}。下载后解压并运行启动阵地突围.bat。"
+
+          if gh release view latest --repo "$repo" >/dev/null 2>&1; then
+            gh api --method PATCH "repos/$repo/git/refs/tags/latest" \
+              -f "sha=$GITHUB_SHA" -F force=true
+            gh release upload latest "$archive" --repo "$repo" --clobber
+            gh release edit latest --repo "$repo" --title "$title" --notes "$notes"
+          else
+            gh release create latest "$archive" --repo "$repo" --target "$GITHUB_SHA" \
+              --title "$title" --notes "$notes"
+          fi
