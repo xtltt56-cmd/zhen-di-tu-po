@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>阵地突围</title>
 <link rel="icon" href="阵地突围-军事图标.ico" />
+<link rel="preload" as="image" href="assets/menu/command-depot.png" />
 <style>
   :root{--ink:#d7dfc5;--panel:#172019ee;--line:#6f8352;--accent:#d6a64d;--danger:#d75c4a}
   *{box-sizing:border-box} body{margin:0;min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at 50% 35%,#263228,#070b08 72%);color:var(--ink);font-family:"Microsoft YaHei",system-ui,sans-serif;overflow:hidden;user-select:none}
@@ -26,12 +27,37 @@
   .btn:focus-visible{outline:3px solid #e6ca70;outline-offset:2px}
   @media(max-width:760px){.panel{padding:22px;width:min(94vw,570px)}h1,#menu h1{font-size:38px}.level-grid{grid-template-columns:1fr 1fr}.btn{margin:8px 0;padding:11px;font-size:15px}}
   @media(max-height:760px){#menu .panel{padding:15px 28px}#menu .panel::before{margin:-4px 0 6px}#menu h1{font-size:38px}#menu h2{margin-bottom:8px;padding-bottom:7px}#menu .btn{margin:4px 0;padding:8px 18px}.hint{margin-top:8px}}
+/* First-paint rules must be inline: scripts and the home stylesheet may arrive late. */
+#menu > .panel{display:none!important}
+#menu:not(.command-ready){background:#161b18}
+#menu:not(.command-ready)::before{display:none}
+#menu:not(.command-ready) .command-home{display:none}
+.home-loading{position:absolute;inset:0;display:grid;place-content:center;text-align:center;padding:24px;background:linear-gradient(#101611aa,#101611e8),url('assets/menu/command-depot.png') center/cover no-repeat;color:#eee9db}
+#menu .home-loading h1{font-size:clamp(32px,6vw,54px);color:#eee9db;letter-spacing:6px}
+.home-loading p{font-size:14px;line-height:1.8;color:#c9cbbd}
+.home-loading button{justify-self:center;padding:12px 28px;border:1px solid #d4b778;background:#d4b778;color:#161b18;font:16px 'Microsoft YaHei',sans-serif;cursor:pointer}
+.home-loading button:focus-visible{outline:3px solid #fff0c7;outline-offset:4px}
+.home-loading [hidden],#menu.command-ready .home-loading{display:none!important}
 </style>
+<link id="home-styles" rel="stylesheet" href="src/home-screen.css" />
 </head>
 <body>
 <canvas id="game" width="1280" height="720"></canvas><div id="toast"></div>
-<section id="menu" class="screen"><div class="panel"><h1>阵地突围</h1><h2>俯视角战术射击</h2><button class="btn" id="start">开始任务</button><button class="btn" id="help">操作说明</button><p class="hint">WASD 移动　鼠标瞄准/射击　Q/E 切换武器　F 互动　G 手雷　R 换弹　ESC 暂停</p></div></section>
+<section id="menu" class="screen" aria-busy="true"><div class="home-loading"><h1>阵地突围</h1><p id="home-loading-status" role="status">正在准备指挥中心…</p><button id="home-loading-retry" type="button" hidden>重新加载</button><noscript><p>请启用浏览器 JavaScript 后重新打开游戏。</p></noscript></div><div class="panel"><h1>阵地突围</h1><h2>俯视角战术射击</h2><button class="btn" id="start">开始任务</button><button class="btn" id="help">操作说明</button><p class="hint">WASD 移动　鼠标瞄准/射击　Q/E 切换武器　F 互动　G 手雷　R 换弹　ESC 暂停</p></div></section>
 <section id="overlay" class="screen hidden"><div id="dialog" class="panel"></div></section>
+<script>
+// This guard is independent of external modules so failed downloads still offer recovery.
+(()=>{
+  const menu=document.getElementById('menu'),status=document.getElementById('home-loading-status'),retry=document.getElementById('home-loading-retry');
+  let ready=false;
+  const timer=setTimeout(()=>fail('加载时间较长，请检查网络或游戏文件后重试。'),15000);
+  function fail(message){if(ready)return;clearTimeout(timer);status.textContent=message;retry.hidden=false;menu.setAttribute('aria-busy','false')}
+  function onError(event){if(event.target?.tagName==='SCRIPT'||event.target===window)fail('游戏初始化失败，请重新加载；若仍失败，请检查游戏文件是否完整。')}
+  retry.addEventListener('click',()=>location.reload());
+  window.addEventListener('error',onError,true);
+  window.GameHomeBoot=Object.freeze({fail,complete(){ready=true;clearTimeout(timer);window.removeEventListener('error',onError,true);menu.setAttribute('aria-busy','false');menu.classList.add('command-ready')}});
+})();
+</script>
 <script src="src/game-config.js"></script>
 <script src="src/performance-system.js"></script>
 <script src="src/vehicle-module-system.js"></script>
@@ -42,6 +68,7 @@
 <script src="src/combat-feedback-system.js"></script>
 <script src="src/frontline-visuals.js"></script>
 <script src="src/frontline-duel-system.js"></script>
+<script src="src/home-screen.js"></script>
 <script>
 (()=>{'use strict';
 const C=document.querySelector('#game'),x=C.getContext('2d'),W=C.width,H=C.height,keys={},mouse={x:W/2,y:H/2,down:false,right:false};
@@ -2708,5 +2735,10 @@ draw=function(){
   x.save();x.translate(shake.x,shake.y);visualV4FrameBase();x.restore();
   if(scene==='play'&&!frontlineMode&&player)CombatFeedback?.draw(x,world,W,H,player.inVehicle||player)
 };
+// Read-only menu adapter: keep campaign state and all combat entry points owned here.
+GameHomeScreen.install({
+  campaign:()=>({...campaignSave,total:levels.length}),
+  frontline:()=>({maxUnlocked:frontlineMaxUnlocked,total:frontlineCampaigns.length})
+});
 })();
 </script></body></html>
