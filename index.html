@@ -40,6 +40,7 @@
 .home-loading [hidden],#menu.command-ready .home-loading{display:none!important}
 </style>
 <link id="home-styles" rel="stylesheet" href="src/home-screen.css" />
+<link rel="stylesheet" href="src/preparation-screen.css" />
 </head>
 <body>
 <canvas id="game" width="1280" height="720"></canvas><div id="toast"></div>
@@ -59,6 +60,7 @@
 })();
 </script>
 <script src="src/game-config.js"></script>
+<script src="src/preparation-screen.js"></script>
 <script src="src/performance-system.js"></script>
 <script src="src/vehicle-module-system.js"></script>
 <script src="src/audio-system.js"></script>
@@ -96,6 +98,9 @@ let campaignSave=loadCampaignSave();campaignArmor=campaignSave.armor;
 function persistCampaignSave(){campaignSave.armor=campaignArmor;let protectedSave=GameSaveSystem?.saveSection('campaign',campaignSave)??true;try{localStorage.setItem(SAVE_KEY,JSON.stringify(campaignSave));return protectedSave}catch(e){return false}}
 function completeCampaignLevel(index){if(index<0||index>=levels.length)return;campaignSave.completed=Math.max(campaignSave.completed,index);campaignSave.maxUnlocked=Math.max(campaignSave.maxUnlocked,Math.min(levels.length-1,index+1));campaignArmor=Math.min(80,(campaignSave.completed+1)*10);persistCampaignSave();message(`战役进度已保存 · 护甲成长 ${campaignArmor}%`)}
 const allyCosts={rifle:2,mg:4,sniper:6,engineer:8};
+const campaignMissionTypes=['clear','vehicles','capture','turrets','commander','capture','vehicles','commander','clear'];
+const campaignMissionLabels={clear:'歼灭战区全部敌军',vehicles:'摧毁敌方全部载具',capture:'占领前沿据点',turrets:'摧毁敌军火力点',commander:'击杀敌军指挥官',training:'自由训练：敌军不会反击'};
+const zombieReinforcements={rifle:{cost:2,ally:'rifle'},mg:{cost:4,ally:'mg'},sniper:{cost:6,ally:'sniper'},engineer:{cost:8,ally:'engineer'},flamer:{cost:14,ally:'flamer'},humvee:{cost:18,vehicle:'humvee'},apc:{cost:28,vehicle:'apc'},hstv:{cost:42,vehicle:'hstv'},m1:{cost:60,vehicle:'m1'},t90m:{cost:60,vehicle:'t90m'},bmpt:{cost:55,vehicle:'bmpt'},apache:{cost:72,vehicle:'apache'}};
 const reinforcementNames={rifle:'步枪兵',mg:'机枪兵',sniper:'狙击兵',engineer:'工兵',flamer:'喷火兵',humvee:'悍马军用车',apc:'CM34装甲车',hstv:'HSTV轻型坦克',m1:'M1主战坦克',t90m:'T-90M主战坦克',bmpt:'BMPT坦克歼击车',apache:'守护者阿帕奇直升机'};
 const reinforcementName=type=>reinforcementNames[type]||type;
 const weaponSpecs=[{name:'突击步枪',cap:30,reload:1.8},{name:'霰弹枪',cap:8,reload:2.2},{name:'轻机枪',cap:80,reload:3.2},{name:'狙击步枪',cap:5,reload:3.5},{name:'RPG',cap:1,reload:5},{name:'毒刺导弹',cap:1,reload:5.5}];
@@ -115,7 +120,7 @@ function populateZombieCity(){covers=covers.filter(c=>dist(c,factory)>760);for(l
 function configureTrainingTargets(){for(const e of enemies){e.trainingTarget=true;e.speed=0;e.detect=0;e.alert=-999}for(const v of enemyVehicles){v.trainingTarget=true;v.fire=Infinity;v.coaxFire=Infinity;v.aaFire=Infinity;v.stationary=-Infinity;v.disabled=true}}
 function resetTrainingTargets(){if(!training)return;for(const e of enemies){e.dead=false;e.hp=e.maxHp;e.hit=0;e.alert=-999}for(const v of enemyVehicles){v.dead=false;v.hp=v.max;v.enemyCrew=v.capacity;v.aps=v.type==='m1'?4:0;v.disabled=true;v.fire=Infinity;v.coaxFire=Infinity;v.aaFire=Infinity}message('训练标靶已全部重置')}
 function resupplyTraining(){if(!training)return;player.hp=100;player.armor=100;player.ammo=weaponSpecs.map(w=>w.cap);player.reserve=[150,48,240,25,8,6];player.grenades=3;if(player.inVehicle){let v=player.inVehicle;v.hp=v.max;v.disabled=false;v.heat=0;v.overheated=false;v.aps=v.type==='m1'?4:v.aps;v.missileAmmo=4;v.missileReload=0}message('训练补给完成：生命、护甲与弹药已恢复')}
-function setupMission(L){let types=['clear','vehicles','capture','turrets','commander','capture','vehicles','commander','clear'],type=training?'training':types[level]||'clear';mission={type,target:{x:L.w*.62,y:L.h*.46},hold:0,required:5,label:'',contested:false};if(type==='clear')mission.label='歼灭战区全部敌军';if(type==='vehicles')mission.label='摧毁敌方全部载具';if(type==='capture'){mission.label='占领前沿据点';covers=covers.filter(c=>dist(c,mission.target)>c.r+125);trenches=trenches.filter(t=>dist(t,mission.target)>180)}if(type==='turrets')mission.label='摧毁敌军火力点';if(type==='commander'){let c=enemies.find(e=>e.type==='turret')||enemies[0];if(c){c.commander=true;c.hp=250;c.maxHp=250}mission.commander=c;mission.label='击杀敌军指挥官'}if(type==='training')mission.label='自由训练：敌军不会反击'}
+function setupMission(L){let type=training?'training':campaignMissionTypes[level]||'clear';mission={type,target:{x:L.w*.62,y:L.h*.46},hold:0,required:5,label:campaignMissionLabels[type],contested:false};if(type==='capture'){covers=covers.filter(c=>dist(c,mission.target)>c.r+125);trenches=trenches.filter(t=>dist(t,mission.target)>180)}if(type==='commander'){let c=enemies.find(e=>e.type==='turret')||enemies[0];if(c){c.commander=true;c.hp=250;c.maxHp=250}mission.commander=c}}
 function objectiveComplete(){if(!mission)return false;if(mission.type==='training')return false;if(mission.type==='clear')return enemies.every(e=>e.dead)&&enemyVehicles.every(v=>v.dead);if(mission.type==='vehicles')return enemyVehicles.every(v=>v.dead);if(mission.type==='turrets')return enemies.filter(e=>e.type==='turret').every(e=>e.dead);if(mission.type==='commander')return !!mission.commander?.dead;if(mission.type==='capture')return mission.hold>=mission.required;return false}
 function updateMission(dt){if(!mission||mission.type!=='capture'||scene!=='play'||mission.hold>=mission.required)return;let friendly=[player,...allies.filter(a=>!a.dead&&!a.inVehicle),...vehicles.filter(v=>!v.dead&&(player.inVehicle===v||v.crew.some(a=>!a.dead)))],hostile=[...enemies.filter(e=>!e.dead),...enemyVehicles.filter(v=>!v.dead)],ours=friendly.some(o=>dist(o,mission.target)<90),theirs=hostile.some(o=>dist(o,mission.target)<105);mission.contested=ours&&theirs;if(ours&&!theirs)mission.hold=clamp(mission.hold+dt,0,mission.required);else if(theirs&&!ours)mission.hold=clamp(mission.hold-dt*.12,0,mission.required);if(mission.hold>=mission.required){mission.hold=mission.required;mission.contested=false;message('据点占领完成',2)}}
 function drawCombatOverlays(){if(!player)return;if(!player.inVehicle){let q=world(player);bar(q.x,q.y-player.r-20,player.hp/100,'#58df70')}for(const a of allies)if(!a.dead&&!a.inVehicle){let q=world(a);bar(q.x,q.y-a.r-12,a.hp/a.maxHp,'#58a9ff')}if(!mission)return;x.save();x.fillStyle='#0d1710e8';x.fillRect(W/2-205,54,410,30);x.strokeStyle=mission.contested?'#ff6464':'#809b67';x.strokeRect(W/2-205,54,410,30);x.fillStyle='#eff4df';x.font='14px Microsoft YaHei';x.textAlign='center';let text=`任务目标：${mission.label}`;if(mission.type==='capture')text+=` ${Math.ceil(mission.hold/mission.required*100)}%${mission.contested?' · 争夺中':''}`;x.fillText(text,W/2,75);x.textAlign='left';if(mission.type==='capture'){let q=world(mission.target),done=mission.hold>=mission.required;x.strokeStyle=done?'#58df70':mission.contested?'#ff6464':'#6cc8ff';x.lineWidth=3;x.beginPath();x.arc(q.x,q.y,90,0,Math.PI*2);x.stroke();x.fillStyle=done?'#b8ffc5':mission.contested?'#ffc0c0':'#c8edff';x.font='12px Microsoft YaHei';x.fillText(done?'据点已控制':mission.contested?'据点争夺中':'占领区',q.x-28,q.y-100)}x.restore()}
@@ -188,7 +193,7 @@ function spawnZombie(kind='walker'){let bloodMoon=wave>0&&wave%10===0,titan=kind
 function startZombieWave(){wave++;let count=18+wave*6,bloodMoon=wave%10===0;for(let i=0;i<count;i++)spawnZombie(wave>=8&&i%24===0?'titan':wave>3&&i%10===0?'brute':wave>2&&i%7===0?'runner':'walker');message(bloodMoon?`血月第 ${wave} 波：速度 +30%，生命 +50%`:`第 ${wave} 波尸潮来袭：${count} 只`)}
 function upgradeDefense(){let line=defenseLines.find(d=>d.level<2);if(!line&&defenseLines.length<9){defenseLines.push({radius:240+defenseLines.length*100,level:0,hp:300,max:300,build:0,id:defenseLines.length});message(`新增第 ${defenseLines.length} 层战壕防线`);return}if(!line)return;line.level++;line.max=line.level===1?650:1350;line.hp=line.max;message(line.level===1?'工程兵升级铁丝网':'工程兵升级城墙')}
 function fillZombieVehicleCrew(vehicle){for(let i=0;i<vehicle.capacity;i++){let crew=createAlly('rifle');crew.x=vehicle.x;crew.y=vehicle.y;crew.inVehicle=vehicle;crew.summonedVehicleCrew=true;vehicle.crew.push(crew);allies.push(crew)}return vehicle}
-function summonZombieReinforcement(){let table={rifle:{cost:2,ally:'rifle'},mg:{cost:4,ally:'mg'},sniper:{cost:6,ally:'sniper'},engineer:{cost:8,ally:'engineer'},flamer:{cost:14,ally:'flamer'},humvee:{cost:18,vehicle:'humvee'},apc:{cost:28,vehicle:'apc'},hstv:{cost:42,vehicle:'hstv'},m1:{cost:60,vehicle:'m1'},t90m:{cost:60,vehicle:'t90m'},bmpt:{cost:55,vehicle:'bmpt'},apache:{cost:72,vehicle:'apache'}},s=table[autoSummon.type]||table.rifle;if(player.spawnPoints<s.cost||s.ally&&allies.filter(a=>!a.dead).length>=24||s.vehicle&&vehicles.filter(v=>!v.dead).length>=12)return;player.spawnPoints-=s.cost;if(s.ally){let a=createAlly(s.ally);a.x=factory.x+rnd(-70,70);a.y=factory.y+rnd(-70,70);allies.push(a)}else{let vehicle=fillZombieVehicleCrew(makeVehicle(s.vehicle,{x:factory.x+rnd(-90,90),y:factory.y+rnd(-90,90)}));vehicles.push(vehicle)}message(`自动增援：${reinforcementName(autoSummon.type)}`)}
+function summonZombieReinforcement(){let s=zombieReinforcements[autoSummon.type]||zombieReinforcements.rifle;if(player.spawnPoints<s.cost||s.ally&&allies.filter(a=>!a.dead).length>=24||s.vehicle&&vehicles.filter(v=>!v.dead).length>=12)return;player.spawnPoints-=s.cost;if(s.ally){let a=createAlly(s.ally);a.x=factory.x+rnd(-70,70);a.y=factory.y+rnd(-70,70);allies.push(a)}else{let vehicle=fillZombieVehicleCrew(makeVehicle(s.vehicle,{x:factory.x+rnd(-90,90),y:factory.y+rnd(-90,90)}));vehicles.push(vehicle)}message(`自动增援：${reinforcementName(autoSummon.type)}`)}
 function updateZombieMode(dt){if(!zombieMode||scene!=='play')return;let alive=enemies.filter(e=>e.zombie&&!e.dead);if(!alive.length){waveDelay-=dt;if(waveDelay<=0){startZombieWave();waveDelay=8}}for(const a of allies){if(a.poisoned&&!a.dead){a.hp-=a.maxHp*.01*dt;if(a.hp<=0)a.dead=true}if(a.dead&&!a.turned){a.turned=true;enemies.push({x:a.x,y:a.y,type:'zombie',zombie:true,hp:120,maxHp:120,r:15,speed:72,damage:12,range:0,detect:0,fire:0,alert:-999,dead:false})}}if(player.poisoned){player.hp-=dt;if(player.hp<=0)end(false)}let engineers=allies.filter(a=>!a.dead&&a.type==='engineer').length;for(const d of defenseLines)if(d.hp<d.max)d.hp=Math.min(d.max,d.hp+engineers*6*dt);if(engineers){let work=defenseLines.find(d=>d.level<2)||defenseLines[defenseLines.length-1];work.build+=engineers*dt;if(work.build>=10){work.build=0;upgradeDefense()}}for(const z of alive){let d=Math.hypot(z.x-factory.x,z.y-factory.y),wall=defenseLines.filter(q=>q.hp>0&&Math.abs(d-q.radius)<28).sort((a,b)=>b.radius-a.radius)[0];z.melee=(z.melee||0)-dt;if(wall&&z.melee<=0){wall.hp=Math.max(0,wall.hp-z.damage);z.melee=z.large?.55:1;continue}let targets=[player,...allies.filter(a=>!a.dead),...vehicles.filter(v=>!v.dead)],t=targets.sort((a,b)=>dist(a,z)-dist(b,z))[0];if(t&&dist(t,z)<(t.r||25)+z.r+10&&z.melee<=0){if(t===player){if(player.inVehicle)damageVehicle(player.inVehicle,z.damage);else{damageCrew(z.damage);player.poisoned=true}}else if(t.friendly){t.hp-=z.damage;t.poisoned=true}else damageVehicle(t,z.damage);z.melee=z.large?.55:1}else if(d<55&&z.melee<=0){factory.hp-=z.damage;z.melee=z.large?.55:1}}for(const f of allies.filter(a=>!a.dead&&a.type==='flamer')){f.flame=(f.flame||0)-dt;if(f.flame<=0){for(const z of enemies)if(z.zombie&&!z.dead&&dist(z,f)<125)damageEnemy(z,4);f.flame=.18}}autoSummon.cooldown-=dt;if(autoSummon.cooldown<=0){summonZombieReinforcement();autoSummon.cooldown=3}if(factory.hp<=0)end(false)}
 function drawZombieOverlay(){if(!zombieMode||!factory)return;let q=world(factory);x.save();for(const d of defenseLines){x.strokeStyle=d.level===0?'#806848':d.level===1?'#b8b8a5':'#87919a';x.lineWidth=d.level===2?10:d.level===1?5:3;x.globalAlpha=.8;x.beginPath();x.arc(q.x,q.y,d.radius,0,Math.PI*2);x.stroke()}x.globalAlpha=1;x.fillStyle='#50565a';x.fillRect(q.x-38,q.y-30,76,60);x.fillStyle='#d4b65c';x.fillText('兵工厂',q.x-22,q.y-40);bar(q.x,q.y-48,factory.hp/factory.max,'#ffd45c');x.fillStyle='#f0dfc7';x.font='14px Microsoft YaHei';x.fillText(`第 ${wave} 波　${wave>0&&wave%10===0?'血月':''}`,W-170,72);x.restore()}
 function canLockMissile(source,target){if(!target?.frontLockImmune)return true;let from=Math.atan2(source.y-target.y,source.x-target.x);return Math.cos(from-target.angle)<.25}
@@ -2734,6 +2739,73 @@ draw=function(){
   const shake=scene==='play'&&!frontlineMode?(CombatFeedback?.shakeOffset?.()||{x:0,y:0}):{x:0,y:0};
   x.save();x.translate(shake.x,shake.y);visualV4FrameBase();x.restore();
   if(scene==='play'&&!frontlineMode&&player)CombatFeedback?.draw(x,world,W,H,player.inVehicle||player)
+};
+// Briefing data comes from the same final definitions used by the battle. No
+// map generation, reinforcement purchase, or timer runs until confirmation.
+const briefingControls=[['WASD','移动'],['鼠标左键','射击'],['F','上下车 / 互动'],['Q / E','切换武器'],['R / G','换弹 / 手雷'],['ESC','暂停']];
+function briefingMap(L,kind,objective){return {kind,width:L.w,height:L.h,entry:{x:135,y:L.h-130},goal:kind==='campaign'?{...L.goal}:null,objective,caption:'战场示意 · 建筑与敌军位置以实际战场为准'}}
+function briefingUnits(types,costs){return types.map(type=>({name:reinforcementNames[type]||type,...(costs?{detail:`${costs[type]} 点`}:{})}))}
+function describeBattle(mode,index){
+  if(mode==='frontline'){
+    const c=frontlineCampaigns[index],previous=frontlineCampaigns[index-1];
+    const units=c.infantry.map(type=>({name:frontlineDefs[type].name,detail:`${frontlineDefs[type].cost} 点${previous&&!previous.infantry.includes(type)?' · 本关解锁':''}`}));
+    const vehicles=c.vehicles.map(type=>({name:frontlineVehicleDefs[type].name,detail:`${frontlineVehicleDefs[type].cost} 点${previous&&!previous.vehicles.includes(type)?' · 本关解锁':''}`}));
+    const locked=Object.keys(frontlineVehicleDefs).filter(type=>!c.vehicles.includes(type)).map(type=>({name:frontlineVehicleDefs[type].name,detail:'本关未开放',locked:true}));
+    return {mode,modeName:'战线指挥',title:c.name,objective:'推进战线并摧毁敌军总部，保护己方总部。',
+      facts:[['战役进度',`已解锁 ${frontlineMaxUnlocked+1} / ${frontlineCampaigns.length} 关`],['总部升级上限',`${c.maxHQ} 级`],['战壕升级上限',`${c.maxFort} 星`],['基础收入',`我方 ${c.playerIncome} / 敌方 ${c.enemyIncome} 点每秒`]],
+      groups:[{title:'本关步兵',items:units},{title:'本关载具',items:vehicles.length?vehicles:[{name:'纯步兵作战',detail:'所有载具尚未开放'}]},...(locked.length?[{title:'尚未开放',items:locked}]:[])],
+      controls:[['鼠标','点击单位与升级按钮'],['战壕箭头','步兵前进 / 后撤'],['ESC','暂停']],
+      tips:[c.desc,'步兵利用战壕防护，机枪兵需在战壕内架枪。','占领阵地、保护支援单位，再集中火力攻击总部。'],
+      map:{kind:'frontline',trenches:c.trenches,friendlyOwned:c.friendlyOwned,enemyOwned:c.enemyOwned,caption:'阵地示意 · 显示本关初始归属'}};
+  }
+  const L=mode==='zombie'?zombieLevel:mode==='training'?trainingLevel:index===0?campaignLevelZero:levels[index];
+  if(mode==='zombie')return {mode,modeName:'丧尸围城',title:'城区兵工厂 · 无限防守',objective:'守住兵工厂与自身，尽可能抵挡更多波尸潮。',
+    facts:[['挑战方式','无限波次'],['血月','每 10 波出现'],['初始自动增援',reinforcementNames.rifle],['失败条件','玩家阵亡或兵工厂被摧毁']],
+    groups:[{title:'自动增援费用',items:Object.entries(zombieReinforcements).map(([type,entry])=>({name:reinforcementNames[type],detail:`${entry.cost} 点`}))}],
+    controls:[...briefingControls.slice(0,4),['F1–F5','选择自动增援兵种'],['F6–F12','选择自动增援载具'],['ESC','暂停']],
+    tips:['击杀获取增援点，达到所选单位费用后自动召唤。','工兵会维护与升级防线；波次之间保留幸存兵力和防护部署。','AI 队友受到丧尸攻击后会感染，死亡后变为丧尸；玩家不会中毒。'],
+    map:{kind:'zombie',caption:'防守关系示意 · 具体墙段与障碍物以战场为准'}};
+  if(mode==='training')return {mode,modeName:'训练场',title:'联合兵种 · 自由训练',objective:'试用步兵武器，驾驶各种载具，熟悉瞄准、换弹与弹种切换。',
+    facts:[['敌军行为','固定标靶，不会反击'],['胜负要求','自由练习，无通关目标'],['离开训练','ESC 暂停后返回主菜单']],
+    groups:[{title:'可驾驶载具',items:briefingUnits(L.vehicles)},{title:'步兵武器',items:weaponSpecs.map(spec=>({name:spec.name}))}],
+    controls:[...briefingControls.slice(0,4),['O','重置标靶'],['P','补给'],['3 / 4 / 5','驾驶坦克时切换主炮弹种']],
+    tips:['按 F 上下车，对照不同载具的装填、过热与防护表现。','训练场的目标与载具在确认进入后生成。'],map:briefingMap(L,'training')};
+  const type=campaignMissionTypes[index]||'clear';
+  return {mode:'campaign',modeName:'战役行动',title:L.name,objective:`${campaignMissionLabels[type]}，完成目标后前往撤离点。`,
+    facts:[['战役进度',`已完成 ${campaignSave.completed+1} / ${levels.length} 关`],['本次开局护甲',campaignArmor],['进入 / 撤离',`${L.entry==='heli'?'直升机':'地道'} / ${L.exit==='heli'?'直升机':'地道'}`],['失败条件','玩家阵亡']],
+    groups:[{title:'可呼叫支援',items:briefingUnits(Object.keys(allyCosts),allyCosts)},{title:'战区友方载具',items:briefingUnits(L.vehicles)}],
+    controls:briefingControls,tips:[type==='capture'?'进入据点范围完成占领，再前往撤离点。':'先完成本关任务，撤离点才会允许通关。','开局可使用全部步兵武器；装甲目标适合使用反装甲武器。','通关后保存关卡解锁与护甲成长；继续行动从关卡开局进入。'],
+    map:briefingMap(L,'campaign',type==='capture'?{x:L.w*.62,y:L.h*.46}:null)};
+}
+GamePreparation.install();
+function prepareBattle(mode,index,launch){
+  if(GamePreparation.isOpen())return;
+  const model=describeBattle(mode,index),fromMenu=scene==='menu';
+  const selecting=fromMenu&&!document.querySelector('#overlay').classList.contains('hidden');
+  model.backLabel=selecting?'返回选关':'返回首页';
+  clearHeldInput();scene='preparation';
+  GamePreparation.open(model,{
+    launch(){clearHeldInput();launch()},
+    failed(){clearHeldInput();scene='preparation'},
+    cancel(){
+      clearHeldInput();scene='menu';player=null;frontlineMode=false;zombieMode=false;training=false;
+      document.querySelector('#menu').classList.remove('hidden');
+      if(!selecting)document.querySelector('#overlay').classList.add('hidden');
+      GameAudio.setMode('menu')
+    }
+  });
+}
+const preparedCampaignStart=startGame;
+startGame=function(n=0,isTraining=false,isZombie=false){
+  const index=clamp(Number.isInteger(n)?n:0,0,levels.length-1);
+  if(!isTraining&&!isZombie&&index>campaignSave.maxUnlocked)return;
+  prepareBattle(isZombie?'zombie':isTraining?'training':'campaign',index,()=>preparedCampaignStart(index,isTraining,isZombie));
+};
+const preparedFrontlineStart=startFrontlineMode;
+startFrontlineMode=function(n=0){
+  const index=clamp(Number.isInteger(n)?n:0,0,frontlineCampaigns.length-1);
+  if(index>frontlineMaxUnlocked)return;
+  prepareBattle('frontline',index,()=>preparedFrontlineStart(index));
 };
 // Read-only menu adapter: keep campaign state and all combat entry points owned here.
 GameHomeScreen.install({

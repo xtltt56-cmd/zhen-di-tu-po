@@ -2330,15 +2330,40 @@
   }
 
   function restart() {
-    state = createState();
-    lastTime = performance.now();
-    global.GameAudio?.setMode('frontline');
+    stop();
+    start();
   }
 
   function start() {
     if (active) return;
+    const team = createTeam('red');
+    global.GamePreparation.open({
+      mode: 'duel', modeName: '本地双人', title: '红蓝对抗 · 联合战线', duel: true,
+      objective: '双方争夺战壕、部署部队，率先摧毁对方总部的一方获胜。',
+      facts: [['双方开局点数', `${team.points} 点`], ['双方基础收入', `${team.income} 点每秒`], ['双方总部耐久', team.hq.maxHp], ['初始总部等级', `${team.hq.level} 级`]],
+      groups: [{ title: '兵种与载具 · 按总部等级解锁', items: Object.values(unitDefs).map(unit => ({ name: unit.name, detail: `${unit.cost} 点 · 总部 ${unit.unlock} 级`, locked: unit.unlock > team.hq.level })) }],
+      tips: ['双方共享同一套经济、兵种和升级规则。', '单位加入出兵队列后自动作战；用战壕命令组织推进。'],
+      map: { kind: 'frontline', trenches: TRENCH_X.length, friendlyOwned: 1, enemyOwned: 1, caption: '初始阵地 · 红方在左，蓝方在右' },
+      redControls: [['1–8', '购买当前页单位或升级'], ['9 / 0', '换页 / 循环阵地命令'], ['Q / E', '选择己方战壕'], ['Z / X / C / V', '后撤 / 驻守 / 集结 / 推进'], ['Enter', '准备 / 取消准备']],
+      blueControls: [['鼠标', '点击单位卡加入出兵队列'], ['换页按钮', '切换步兵与装甲页面'], ['己方战壕', '选择升级和命令目标'], ['命令按钮', '下达后撤、驻守、集结、推进命令'], ['准备按钮', '准备 / 取消准备']],
+    }, {
+      launch: startPreparedMatch,
+      cancel: () => {
+        document.querySelector('#menu')?.classList.remove('hidden');
+        document.querySelector('#overlay')?.classList.add('hidden');
+        global.GameAudio?.setMode('menu');
+      },
+      failed: () => { active = false; cancelAnimationFrame(animationFrame); animationFrame = 0; state = null; },
+    });
+  }
+
+  function startPreparedMatch() {
+    if (active) return;
     active = true;
     state = createState();
+    state.teams.red.ready = true;
+    state.teams.blue.ready = true;
+    beginIfReady();
     hover = null;
     document.querySelector('#menu')?.classList.add('hidden');
     document.querySelector('#overlay')?.classList.add('hidden');
