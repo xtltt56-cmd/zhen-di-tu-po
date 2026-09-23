@@ -47,9 +47,11 @@
     } else {
       const point = p => ({ x: 50 + p.x / map.width * 540, y: 32 + p.y / map.height * 244 });
       const entry = point(map.entry);
+      if (map.route) shapes += `<polyline points="${map.route.map(site => { const p = point(site); return `${p.x},${p.y}`; }).join(' ')}" fill="none" stroke="#b9a56e" stroke-width="5" stroke-opacity=".65" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="11 8"/>`;
       shapes += marker(entry.x, entry.y, map.kind === 'training' ? '训练入口' : '我方进入点', colors.friendly);
       if (map.goal) { const goal = point(map.goal); shapes += marker(goal.x, goal.y, '撤离点', colors.goal, 'end'); }
-      if (map.objective) { const goal = point(map.objective); shapes += marker(goal.x, goal.y, '占领区', colors.goal, 'end'); }
+      if (map.landmarks) for (const site of map.landmarks) { const p = point(site); shapes += marker(p.x, p.y, site.name, site.kind === 'objective' ? colors.goal : colors.friendly, 'end'); }
+      else if (map.objective) { const goal = point(map.objective); shapes += marker(goal.x, goal.y, '占领区', colors.goal, 'end'); }
       if (map.kind === 'training') shapes += marker(355, 125, '载具与固定标靶', colors.goal, 'end');
       shapes += `<text x="590" y="292" text-anchor="end" fill="#98a58f">区域规模 ${map.width} × ${map.height}</text>`;
     }

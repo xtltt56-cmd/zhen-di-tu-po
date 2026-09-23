@@ -3,8 +3,6 @@
 
   const floating = [];
   const incoming = [];
-  let marker = 0;
-  let markerCritical = false;
   let shake = 0;
 
   function enabled(name, fallback = true) {
@@ -15,8 +13,6 @@
   function recordHit(options = {}) {
     const amount = Math.max(0, Number(options.amount) || 0);
     if (!amount) return;
-    marker = Math.min(0.34, marker + 0.13);
-    markerCritical = markerCritical || Boolean(options.critical);
     if (enabled('hitMarkers') && Number.isFinite(options.x) && Number.isFinite(options.y)) {
       floating.push({
         x: options.x,
@@ -24,6 +20,7 @@
         amount,
         life: 0.72,
         max: 0.72,
+        markerLife: 0.34,
         critical: Boolean(options.critical),
         armor: Boolean(options.armor),
         label: options.label || '',
@@ -49,11 +46,10 @@
 
   function update(dt) {
     const step = Math.max(0, Math.min(0.05, Number(dt) || 0));
-    marker = Math.max(0, marker - step);
-    if (!marker) markerCritical = false;
     shake = Math.max(0, shake - step * 2.8);
     for (const item of floating) {
       item.life -= step;
+      item.markerLife = Math.max(0, item.markerLife - step);
       item.y -= step * 22;
     }
     for (const item of incoming) item.life -= step;
@@ -69,25 +65,22 @@
 
   function draw(context, worldToScreen, width, height, listener) {
     context.save();
-    if (enabled('hitMarkers') && marker > 0) {
-      const alpha = Math.min(1, marker * 7);
-      context.translate(width / 2, height / 2);
-      context.strokeStyle = markerCritical ? `rgba(255,205,86,${alpha})` : `rgba(238,244,226,${alpha})`;
-      context.lineWidth = markerCritical ? 3 : 2;
-      for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
-        context.beginPath();
-        context.moveTo(sx * 9, sy * 9);
-        context.lineTo(sx * 17, sy * 17);
-        context.stroke();
-      }
-      context.setTransform(1, 0, 0, 1, 0, 0);
-    }
-
     if (enabled('hitMarkers')) {
       context.textAlign = 'center';
       context.font = 'bold 13px Microsoft YaHei';
       for (const item of floating) {
         const point = worldToScreen(item);
+        if (item.markerLife > 0) {
+          const alpha = Math.min(1, item.markerLife * 7);
+          context.strokeStyle = item.critical ? `rgba(255,205,86,${alpha})` : `rgba(238,244,226,${alpha})`;
+          context.lineWidth = item.critical ? 3 : 2;
+          for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+            context.beginPath();
+            context.moveTo(point.x + sx * 9, point.y + sy * 9);
+            context.lineTo(point.x + sx * 17, point.y + sy * 17);
+            context.stroke();
+          }
+        }
         const alpha = Math.max(0, Math.min(1, item.life / item.max));
         context.fillStyle = item.armor ? `rgba(126,205,255,${alpha})` : item.critical ? `rgba(255,199,72,${alpha})` : `rgba(242,246,232,${alpha})`;
         context.shadowColor = '#000';
@@ -126,9 +119,8 @@
     reset() {
       floating.length = 0;
       incoming.length = 0;
-      marker = 0;
       shake = 0;
     },
-    status: () => ({ floating: floating.length, incoming: incoming.length, marker, shake }),
+    status: () => ({ floating: floating.length, incoming: incoming.length, marker: floating.reduce((value, item) => Math.max(value, item.markerLife), 0), shake }),
   });
 })(window);

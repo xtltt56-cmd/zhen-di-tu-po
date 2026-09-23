@@ -68,6 +68,12 @@
   for (let level = 1; level <= 5; level++) load(`hq-${level}`, `hq-level-${level}`);
   load('emplacement-trenchMg', 'trench-mg-v2', 'svg');
   load('emplacement-trenchAt', 'trench-at-v2', 'svg');
+  const landscape = new Image();
+  landscape.decoding = 'async';
+  landscape.src = 'assets/environment-v5/frontline-landscape.png';
+  const trenchPhoto = new Image();
+  trenchPhoto.decoding = 'async';
+  trenchPhoto.src = 'assets/defenses-v3/trench.png';
 
   function sideOf(unit, options = {}) {
     if (Number.isFinite(options.side)) return options.side >= 0 ? 1 : -1;
@@ -491,8 +497,8 @@
     earth.addColorStop(0.28, '#594832');
     earth.addColorStop(1, '#342b23');
     ctx.fillStyle = earth;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = selected ? 4 : 2;
+    ctx.strokeStyle = selected ? color : 'rgba(187, 166, 120, .34)';
+    ctx.lineWidth = selected ? 3 : 1;
     ctx.beginPath();
     ctx.moveTo(-53, 0);
     ctx.lineTo(-49, 38);
@@ -525,6 +531,11 @@
     ctx.moveTo(-35, 34);
     ctx.lineTo(35, 34);
     ctx.stroke();
+    if (ready(trenchPhoto)) {
+      ctx.drawImage(trenchPhoto, -59, -12, 118, 51);
+      ctx.fillStyle = 'rgba(10, 10, 8, .28)';
+      ctx.fillRect(-41, 11, 82, 19);
+    }
 
     ctx.strokeStyle = '#252921';
     ctx.lineWidth = 3;
@@ -602,6 +613,16 @@
     return true;
   }
 
+  function drawTrenchForeground(ctx, trench, options = {}) {
+    if (!ready(trenchPhoto)) return;
+    const x = finite(options.x, finite(trench.x, 0));
+    const ground = finite(options.ground, 470);
+    const sourceY = Math.floor(trenchPhoto.naturalHeight * .72);
+    ctx.save();
+    ctx.drawImage(trenchPhoto, 0, sourceY, trenchPhoto.naturalWidth, trenchPhoto.naturalHeight - sourceY, x - 57, ground + 8, 114, 19);
+    ctx.restore();
+  }
+
   function drawShot(ctx, shot, options = {}) {
     const hasExplicitMax = Number.isFinite(shot.max) || Number.isFinite(shot.maxT);
     const max = Math.max(0.001, finite(shot.max, finite(shot.maxT, finite(shot.life, finite(shot.t, 0.1)))));
@@ -609,7 +630,8 @@
     const progress = hasExplicitMax ? clamp(1 - life / max, 0, 1) : 1;
     const x = finite(shot.x1, 0) + (finite(shot.x2, 0) - finite(shot.x1, 0)) * progress;
     const y = finite(shot.y1, 0) + (finite(shot.y2, 0) - finite(shot.y1, 0)) * progress;
-    const projectile = shot.projectile || (/rocket|stinger|missile|engineer/i.test(shot.type || '') ? 'missile' : /m1|t90|hstv|tank|artillery|trenchAt/i.test(shot.type || '') ? 'shell' : shot.type === 'sniper' ? 'sniper' : 'bullet');
+    const declared = shot.projectile;
+    const projectile = declared === 'rocket' || declared === 'missile' ? 'missile' : declared === 'tankShell' ? 'shell' : declared || (/rocket|stinger|missile|engineer/i.test(shot.type || '') ? 'missile' : /m1|t90|hstv|tank|artillery|trenchAt/i.test(shot.type || '') ? 'shell' : shot.type === 'sniper' ? 'sniper' : 'bullet');
     const side = sideOf(shot, { side: shot.side, team: shot.team });
     const color = projectile === 'missile' ? '#f7b654' : projectile === 'shell' ? '#fff0b5' : projectile === 'sniper' ? '#fff9d8' : side === 1 ? '#ff9b72' : '#8cc7ff';
     ctx.save();
@@ -622,6 +644,10 @@
     ctx.lineTo(x, y);
     ctx.stroke();
     ctx.shadowBlur = 0;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, projectile === 'missile' ? 5 : projectile === 'shell' ? 3.5 : projectile === 'sniper' ? 2.7 : 2, 0, Math.PI * 2);
+    ctx.fill();
     if (projectile === 'missile') {
       const angle = Math.atan2(finite(shot.y2, 0) - finite(shot.y1, 0), finite(shot.x2, 0) - finite(shot.x1, 0));
       for (let puff = 1; puff <= 4; puff++) {
@@ -716,6 +742,12 @@
     const ground = finite(options.ground, 470);
     const bottom = finite(options.bottom, 578);
     const time = finite(options.time, 0);
+    if (ready(landscape)) {
+      const horizon = Math.round(landscape.naturalHeight * .725);
+      ctx.drawImage(landscape, 0, 0, landscape.naturalWidth, horizon, 0, top, width, ground - top);
+      ctx.drawImage(landscape, 0, horizon, landscape.naturalWidth, landscape.naturalHeight - horizon, 0, ground, width, Math.max(0, bottom - ground));
+      return;
+    }
     const sky = ctx.createLinearGradient(0, top, 0, ground);
     sky.addColorStop(0, '#8c968d');
     sky.addColorStop(0.55, '#67736c');
@@ -790,6 +822,7 @@
     drawVehicle,
     drawHeadquarters,
     drawTrench,
+    drawTrenchForeground,
     drawShot,
     drawEffect,
     drawDust,

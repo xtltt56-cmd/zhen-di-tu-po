@@ -1977,7 +1977,8 @@
     ctx.fillStyle = '#9eae9a';
     ctx.font = '10px Microsoft YaHei';
     const selected = selectedTrench(team);
-    ctx.fillText(`所选：${selected ? `${state.trenches.indexOf(selected) + 1}号战壕 ${'★'.repeat(selected.level)}` : '无阵地'} · 命令 ${selected ? selected.orders[team] : '-'}`, halfX + 220, PANEL_TOP + 20);
+    const orderNames = { retreat: '后撤', hold: '驻守', rally: '集结', advance: '推进' };
+    ctx.fillText(`所选：${selected ? `${state.trenches.indexOf(selected) + 1}号战壕 ${'★'.repeat(selected.level)}` : '无阵地'} · ${selected ? orderNames[selected.orders[team]] || '驻守' : '-'}`, halfX + 220, PANEL_TOP + 20, width - 320);
 
     const rects = [];
     const startX = halfX + 12;
@@ -2004,7 +2005,7 @@
     ctx.fillText(player.message, team === 'red' ? halfX + 14 : halfX + width - 14, HEIGHT - 4);
     ctx.textAlign = 'left';
 
-    const pageX = team === 'red' ? halfX + width - 82 : halfX + 10;
+    const pageX = halfX + width - 82;
     ctx.fillStyle = teamDark(team);
     ctx.strokeStyle = teamColor(team);
     ctx.fillRect(pageX, PANEL_TOP + 4, 72, 21);
@@ -2164,6 +2165,7 @@
     state.trenches.forEach(drawTrench);
     drawDust();
     drawUnits();
+    if (global.FrontlineVisuals?.drawTrenchForeground) state.trenches.forEach(trench => global.FrontlineVisuals.drawTrenchForeground(ctx, trench, { ground: GROUND }));
     drawShotsAndEffects();
     drawBattlefieldAtmosphere();
     drawTopHud();

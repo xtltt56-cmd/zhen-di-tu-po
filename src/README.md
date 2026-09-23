@@ -13,8 +13,9 @@
 7. `pathfinding-system.js`：带短期方向记忆的障碍预判和局部绕行。
 8. `combat-feedback-system.js`：命中标记、伤害数字、来袭方向和轻量镜头震动。
 9. `frontline-visuals.js`：普通战线与双人战线共享的高清素材、人物动画、载具尺寸、总部、战壕及战斗特效渲染。
-10. `frontline-duel-system.js`：同机红蓝双人战线、对称经济、双输入、战壕和总部升级。
-11. `index.html`：关卡、模式、实体更新、输入和 Canvas 渲染。
+10. `environment-v5.js`：战役、训练场和丧尸模式共用的地表、场景物件与兵工厂视觉层；不修改碰撞或数值。
+11. `frontline-duel-system.js`：同机红蓝双人战线、对称经济、双输入、战壕和总部升级。
+12. `index.html`：关卡、模式、实体更新、输入和 Canvas 渲染。
 
 ## 设计边界
 
