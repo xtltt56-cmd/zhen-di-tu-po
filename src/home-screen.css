@@ -4,7 +4,7 @@
 #menu.command-ready::before { display:none; }
 #menu.command-ready > .panel, #menu.command-ready > .panel::before { display:none; content:none; }
 .command-home { position:relative; isolation:isolate; overflow:hidden; width:100%; min-height:100%; height:100%; display:grid; grid-template-columns:clamp(238px,23vw,350px) 1fr; grid-template-rows:160px 1fr 62px; }
-.home-backdrop { position:absolute; z-index:-3; inset:0; background:#222a25 url('../assets/menu/command-depot.png') center/cover no-repeat; }
+.home-backdrop { position:absolute; z-index:-3; inset:0; background:#222a25 url('../assets/menu/command-breakout-poster-v2.png') center/cover no-repeat; }
 .home-backdrop::after { content:""; position:absolute; inset:0; background:linear-gradient(0deg,rgba(9,13,11,.93),transparent 53%),linear-gradient(90deg,transparent 50%,rgba(10,14,12,.12)); }
 .home-atmosphere { position:absolute; z-index:-2; inset:0; pointer-events:none; background:radial-gradient(ellipse at 43% 32%,#c2c6bc16,transparent 50%); animation:home-haze 12s ease-in-out infinite alternate; }
 @keyframes home-haze { from { opacity:.25; transform:translateX(-1%); } to { opacity:.85; transform:translateX(1%); } }

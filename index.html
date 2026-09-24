@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>阵地突围</title>
 <link rel="icon" href="阵地突围-军事图标.ico" />
-<link rel="preload" as="image" href="assets/menu/command-depot.png" />
+<link rel="preload" as="image" href="assets/menu/command-breakout-poster-v2.png" />
 <style>
   :root{--ink:#d7dfc5;--panel:#172019ee;--line:#6f8352;--accent:#d6a64d;--danger:#d75c4a}
   *{box-sizing:border-box} body{margin:0;min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at 50% 35%,#263228,#070b08 72%);color:var(--ink);font-family:"Microsoft YaHei",system-ui,sans-serif;overflow:hidden;user-select:none}
@@ -15,7 +15,7 @@
   #overlay{background:#050805c7;backdrop-filter:blur(4px)}#overlay .panel{width:min(760px,94vw);padding:28px}.modal{max-height:88vh;overflow:auto;text-align:left;padding:0 4px}.modal h2{text-align:center;color:#d6bd72}.modal li{margin:8px 0;color:#d4dcc7;line-height:1.55}.modal kbd{background:#546047;padding:2px 7px;border:1px solid #899877;border-radius:2px;color:#fff}.modal>.btn:last-child{position:sticky;bottom:0;margin-top:18px;box-shadow:0 -10px 24px #10170fe8}
   .level-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:18px 0}.level-grid .btn{margin:0;padding:11px 7px;font-size:13px;letter-spacing:0}.level-grid .locked{opacity:.38;cursor:not-allowed;filter:grayscale(1)}.save-status{color:#d6bd72;font-size:13px;line-height:1.7;margin:8px 0 15px}
   #toast{position:fixed;left:50%;top:26%;transform:translateX(-50%);z-index:2;color:#fff5cb;background:#172017dc;border:1px solid #929a63;padding:10px 18px;opacity:0;transition:.2s;pointer-events:none}.show{opacity:1!important}
-#menu{background:linear-gradient(90deg,rgba(5,9,6,.68),rgba(8,12,8,.2),rgba(5,9,6,.67)),url('menu-vehicles-background.png') center/cover no-repeat}
+#menu{background:linear-gradient(90deg,rgba(5,9,6,.68),rgba(8,12,8,.2),rgba(5,9,6,.67)),url('assets/menu/command-breakout-poster-v2.png') center/cover no-repeat}
 #menu::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,#d5c0800e 0,transparent 28%,transparent 68%,#020503a6 100%),repeating-linear-gradient(0deg,#fff0 0 3px,#00000012 4px);mix-blend-mode:normal}
 #menu .panel{position:relative;background:linear-gradient(145deg,#101811f2,#20291ce8);backdrop-filter:blur(7px);border-color:#a0915d;box-shadow:0 24px 80px #000e,inset 0 1px #f3e6b33d,inset 0 0 60px #8196650c}
 #menu .panel::before{content:"TACTICAL COMBINED ARMS";display:block;margin:-16px 0 12px;color:#9eaa8a;font:700 9px Consolas,monospace;letter-spacing:4px}
@@ -32,7 +32,7 @@
 #menu:not(.command-ready){background:#161b18}
 #menu:not(.command-ready)::before{display:none}
 #menu:not(.command-ready) .command-home{display:none}
-.home-loading{position:absolute;inset:0;display:grid;place-content:center;text-align:center;padding:24px;background:linear-gradient(#101611aa,#101611e8),url('assets/menu/command-depot.png') center/cover no-repeat;color:#eee9db}
+.home-loading{position:absolute;inset:0;display:grid;place-content:center;text-align:center;padding:24px;background:linear-gradient(#101611aa,#101611e8),url('assets/menu/command-breakout-poster-v2.png') center/cover no-repeat;color:#eee9db}
 #menu .home-loading h1{font-size:clamp(32px,6vw,54px);color:#eee9db;letter-spacing:6px}
 .home-loading p{font-size:14px;line-height:1.8;color:#c9cbbd}
 .home-loading button{justify-self:center;padding:12px 28px;border:1px solid #d4b778;background:#d4b778;color:#161b18;font:16px 'Microsoft YaHei',sans-serif;cursor:pointer}
